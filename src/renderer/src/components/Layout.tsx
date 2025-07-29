@@ -105,18 +105,18 @@ export function Layout({
               )
             })}
           </ul>
-        </nav>
 
-        {/* Logout */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
+          {/* Logout */}
+          <div className="pt-7">
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+        </nav>
       </div>
 
       {/* Main Content */}
