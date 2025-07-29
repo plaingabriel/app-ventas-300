@@ -1,20 +1,24 @@
-import React from 'react';
-import { Building2, Users, FileText, Calculator, BarChart3, LogOut } from 'lucide-react';
-import { Usuario } from '../types';
+import { BarChart3, Building2, Calculator, FileText, LogOut, Users } from 'lucide-react'
+import React from 'react'
+import { Usuario } from '../types'
 
 interface LayoutProps {
-  children: React.ReactNode;
-  usuarioActual: Usuario;
-  onCambiarSeccion: (seccion: string) => void;
-  seccionActual: string;
-  onLogout: () => void;
+  children: React.ReactNode
+  usuarioActual: Usuario
+  onCambiarSeccion: (seccion: string) => void
+  seccionActual: string
+  onLogout: () => void
 }
 
-export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActual, onLogout }: LayoutProps) {
+export function Layout({
+  children,
+  usuarioActual,
+  onCambiarSeccion,
+  seccionActual,
+  onLogout
+}: LayoutProps) {
   const getMenuItems = () => {
-    const baseItems = [
-      { id: 'dashboard', label: 'Dashboard', icon: BarChart3 }
-    ];
+    const baseItems = [{ id: 'dashboard', label: 'Dashboard', icon: BarChart3 }]
 
     switch (usuarioActual.rol) {
       case 'admin':
@@ -24,30 +28,27 @@ export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActua
           { id: 'solicitudes', label: 'Solicitudes', icon: FileText },
           { id: 'asignaciones', label: 'Asignaciones', icon: Building2 },
           { id: 'evaluaciones', label: 'Evaluaciones', icon: Calculator }
-        ];
+        ]
       case 'coordinador':
         return [
           ...baseItems,
           { id: 'propietarios', label: 'Propietarios', icon: Users },
           { id: 'solicitudes', label: 'Solicitudes', icon: FileText },
           { id: 'asignaciones', label: 'Asignaciones', icon: Building2 }
-        ];
+        ]
       case 'perito':
         return [
           ...baseItems,
           { id: 'mis-evaluaciones', label: 'Mis Evaluaciones', icon: Calculator }
-        ];
+        ]
       case 'finanzas':
-        return [
-          ...baseItems,
-          { id: 'reportes', label: 'Reportes', icon: BarChart3 }
-        ];
+        return [...baseItems, { id: 'reportes', label: 'Reportes', icon: BarChart3 }]
       default:
-        return baseItems;
+        return baseItems
     }
-  };
+  }
 
-  const menuItems = getMenuItems();
+  const menuItems = getMenuItems()
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -68,7 +69,11 @@ export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActua
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <span className="text-blue-600 font-medium text-sm">
-                {usuarioActual.nombre.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {usuarioActual.nombre
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()}
               </span>
             </div>
             <div>
@@ -82,7 +87,7 @@ export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActua
         <nav className="p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => {
-              const Icon = item.icon;
+              const Icon = item.icon
               return (
                 <li key={item.id}>
                   <button
@@ -97,7 +102,7 @@ export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActua
                     <span>{item.label}</span>
                   </button>
                 </li>
-              );
+              )
             })}
           </ul>
         </nav>
@@ -118,14 +123,12 @@ export function Layout({ children, usuarioActual, onCambiarSeccion, seccionActua
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900 capitalize">
-            {menuItems.find(item => item.id === seccionActual)?.label || 'Dashboard'}
+            {menuItems.find((item) => item.id === seccionActual)?.label || 'Dashboard'}
           </h2>
         </header>
-        
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
-  );
+  )
 }

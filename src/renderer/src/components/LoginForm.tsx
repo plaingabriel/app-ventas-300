@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { Building2, LogIn } from 'lucide-react';
-import { Usuario } from '../types';
+import { Building2, LogIn } from 'lucide-react'
+import React, { useState } from 'react'
+import { Usuario } from '../types'
 
 interface LoginFormProps {
-  usuarios: Usuario[];
-  onLogin: (usuario: Usuario) => void;
+  usuarios: Usuario[]
+  onLogin: (usuario: Usuario) => void
 }
 
 export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
-  const [email, setEmail] = useState('admin@ventas300.com');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('admin@ventas300.com')
+  const [error, setError] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const usuario = usuarios.find(u => u.email === email);
+    e.preventDefault()
+
+    const usuario = usuarios.find((u) => u.email === email)
     if (usuario) {
-      onLogin(usuario);
+      onLogin(usuario)
     } else {
-      setError('Usuario no encontrado');
+      setError('Usuario no encontrado')
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
@@ -47,8 +47,8 @@ export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
                 id="email"
                 value={email}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
+                  setEmail(e.target.value)
+                  setError('')
                 }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
@@ -60,11 +60,7 @@ export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
               </select>
             </div>
 
-            {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
 
             <button
               type="submit"
@@ -79,14 +75,22 @@ export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
             <h3 className="text-sm font-medium text-gray-900 mb-2">Usuarios de Prueba:</h3>
             <ul className="text-xs text-gray-600 space-y-1">
-              <li>• <strong>Admin:</strong> Acceso completo al sistema</li>
-              <li>• <strong>Coordinador:</strong> Gestión de asignaciones</li>
-              <li>• <strong>Perito:</strong> Evaluaciones de propiedades</li>
-              <li>• <strong>Finanzas:</strong> Reportes y comisiones</li>
+              <li>
+                • <strong>Admin:</strong> Acceso completo al sistema
+              </li>
+              <li>
+                • <strong>Coordinador:</strong> Gestión de asignaciones
+              </li>
+              <li>
+                • <strong>Perito:</strong> Evaluaciones de propiedades
+              </li>
+              <li>
+                • <strong>Finanzas:</strong> Reportes y comisiones
+              </li>
             </ul>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

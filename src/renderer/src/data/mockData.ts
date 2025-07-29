@@ -1,4 +1,4 @@
-import { Propietario, Propiedad, Perito, SolicitudVenta, Evaluacion, Usuario } from '../types';
+import { Evaluacion, Perito, Propiedad, Propietario, SolicitudVenta, Usuario } from '../types'
 
 export const mockPropietarios: Propietario[] = [
   {
@@ -22,7 +22,7 @@ export const mockPropietarios: Propietario[] = [
     email: 'roberto.silva@email.com',
     fechaRegistro: '2025-01-17'
   }
-];
+]
 
 export const mockPropiedades: Propiedad[] = [
   {
@@ -49,7 +49,7 @@ export const mockPropiedades: Propiedad[] = [
     caracteristicas: '500 m², uso comercial, frente a carretera',
     fechaRegistro: '2025-01-17'
   }
-];
+]
 
 export const mockPeritos: Perito[] = [
   {
@@ -79,7 +79,7 @@ export const mockPeritos: Perito[] = [
     disponible: false,
     comisionPorcentaje: 15
   }
-];
+]
 
 export const mockSolicitudes: SolicitudVenta[] = [
   {
@@ -111,20 +111,21 @@ export const mockSolicitudes: SolicitudVenta[] = [
     estado: 'pendiente',
     fechaCreacion: '2025-01-17'
   }
-];
+]
 
 export const mockEvaluaciones: Evaluacion[] = [
   {
     id: '1',
     solicitudId: '1',
     peritoId: '1',
-    observaciones: 'Casa bien conservada, cocina remodelada recientemente, jardín en excelente estado. Requiere pintura exterior menor.',
+    observaciones:
+      'Casa bien conservada, cocina remodelada recientemente, jardín en excelente estado. Requiere pintura exterior menor.',
     valorEvaluado: 150000,
     comisionCalculada: 15000,
     fotos: ['foto1.jpg', 'foto2.jpg', 'foto3.jpg'],
     fechaEvaluacion: '2025-01-18'
   }
-];
+]
 
 export const mockUsuarios: Usuario[] = [
   {
@@ -151,4 +152,4 @@ export const mockUsuarios: Usuario[] = [
     email: 'finanzas@ventas300.com',
     rol: 'finanzas'
   }
-];
+]

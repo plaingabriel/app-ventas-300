@@ -1,16 +1,8 @@
-import React from 'react';
-import { 
-  TrendingUp, 
-  FileText, 
-  Users, 
-  DollarSign, 
-  Clock, 
-  CheckCircle 
-} from 'lucide-react';
-import { EstadisticaDashboard } from '../types';
+import { CheckCircle, Clock, DollarSign, FileText, TrendingUp, Users } from 'lucide-react'
+import { EstadisticaDashboard } from '../types'
 
 interface DashboardProps {
-  estadisticas: EstadisticaDashboard;
+  estadisticas: EstadisticaDashboard
 }
 
 export function Dashboard({ estadisticas }: DashboardProps) {
@@ -18,8 +10,8 @@ export function Dashboard({ estadisticas }: DashboardProps) {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
   const cards = [
     {
@@ -54,7 +46,7 @@ export function Dashboard({ estadisticas }: DashboardProps) {
       bgColor: 'bg-green-50',
       textColor: 'text-green-700'
     }
-  ];
+  ]
 
   const financialCards = [
     {
@@ -73,62 +65,70 @@ export function Dashboard({ estadisticas }: DashboardProps) {
       bgColor: 'bg-indigo-50',
       textColor: 'text-indigo-700'
     }
-  ];
+  ]
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Principal</h1>
-        <p className="text-gray-600 mt-2">
-          Resumen general del sistema VENTAS300
-        </p>
+        <p className="text-gray-600 mt-2">Resumen general del sistema VENTAS300</p>
       </div>
 
       {/* Estadísticas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card) => {
-          const Icon = card.icon;
+          const Icon = card.icon
           return (
-            <div key={card.title} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div
+              key={card.title}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{card.title}</p>
                   <p className="text-3xl font-bold text-gray-900 mt-2">{card.value}</p>
                 </div>
-                <div className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}
+                >
                   <Icon className={`h-6 w-6 ${card.textColor}`} />
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
       {/* Estadísticas financieras */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {financialCards.map((card) => {
-          const Icon = card.icon;
+          const Icon = card.icon
           return (
-            <div key={card.title} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div
+              key={card.title}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{card.title}</p>
                   <p className="text-2xl font-bold text-gray-900 mt-2">{card.value}</p>
                 </div>
-                <div className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}
+                >
                   <Icon className={`h-6 w-6 ${card.textColor}`} />
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
       {/* Estado del flujo */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Flujo de Trabajo</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -164,5 +164,5 @@ export function Dashboard({ estadisticas }: DashboardProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
