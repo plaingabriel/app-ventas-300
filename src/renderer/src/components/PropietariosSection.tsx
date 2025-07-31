@@ -1,29 +1,19 @@
-import { Calendar, Mail, Phone, Plus, User } from 'lucide-react'
+import { Phone, Plus, User } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { NewPropiedad, Propiedad, SolicitantePropiedades } from 'src/lib/definitions'
-import { Propietario } from '../types'
+import {
+  NewPropiedad,
+  NewSolicitante,
+  NewSolicitud,
+  Propiedad,
+  SolicitantePropiedades
+} from 'src/lib/definitions'
 
-interface PropietariosSectionProps {
-  propietarios: Propietario[]
-  propiedades: Propiedad[]
-  onAgregarPropietario: (propietario: Omit<Propietario, 'id'>) => void
-  onAgregarPropiedad: (propiedad: Omit<Propiedad, 'id'>) => void
-  onCrearSolicitud: (propietarioId: string, propiedadId: string) => void
-}
-
-export function PropietariosSection({
-  propietarios,
-  propiedades,
-  onAgregarPropietario,
-  onAgregarPropiedad,
-  onCrearSolicitud
-}: PropietariosSectionProps) {
+export function PropietariosSection() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarFormPropiedad, setMostrarFormPropiedad] = useState<number | null>(null)
-  const [formData, setFormData] = useState({
-    nombre: '',
-    telefono: '',
-    email: ''
+  const [formData, setFormData] = useState<NewSolicitante>({
+    Nombre: '',
+    Contacto: ''
   })
   const [propiedadData, setPropiedadData] = useState<NewPropiedad>({
     Direccion: '',
@@ -32,18 +22,19 @@ export function PropietariosSection({
   })
   const [solicitantes, setSolicitantes] = useState<SolicitantePropiedades[]>([])
 
-  const handleSubmitPropietario = (e: React.FormEvent) => {
+  const handleSubmitPropietario = async (e: React.FormEvent) => {
     e.preventDefault()
-    onAgregarPropietario({
-      ...formData,
-      fechaRegistro: new Date().toISOString().split('T')[0]
-    })
-    setFormData({ nombre: '', telefono: '', email: '' })
+
+    await window.electron.ipcRenderer.invoke('create-solicitante', formData)
+    await getPropietarios()
+
+    setFormData({ Nombre: '', Contacto: '' })
     setMostrarFormulario(false)
   }
 
   const handleSubmitPropiedad = async (e: React.FormEvent, propietarioId: number) => {
     e.preventDefault()
+
     await window.electron.ipcRenderer.invoke('create-propiedad', propiedadData, propietarioId)
     await getPropietarios()
 
@@ -51,8 +42,8 @@ export function PropietariosSection({
     setMostrarFormPropiedad(null)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES')
+  const createSolicitud = async (solicitud: NewSolicitud) => {
+    await window.electron.ipcRenderer.invoke('create-solicitud', solicitud)
   }
 
   const getPropietarios = async () => {
@@ -102,32 +93,20 @@ export function PropietariosSection({
               </label>
               <input
                 type="text"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                value={formData.Nombre}
+                onChange={(e) => setFormData({ ...formData, Nombre: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Contacto</label>
               <input
                 type="tel"
-                value={formData.telefono}
-                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={formData.Contacto}
+                placeholder="0416-1234567"
+                onChange={(e) => setFormData({ ...formData, Contacto: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -288,12 +267,17 @@ export function PropietariosSection({
                             </h5>
                             <p className="text-sm text-gray-600">{propiedad.Direccion}</p>
                           </div>
-                          {/* <button
-                            onClick={() => onCrearSolicitud(propietario.id, propiedad.id)}
+                          <button
+                            onClick={() =>
+                              createSolicitud({
+                                ID_Propiedad: propiedad.ID,
+                                ID_Solicitante: propietario.ID
+                              })
+                            }
                             className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm font-medium hover:bg-blue-200 transition-colors"
                           >
                             Crear Solicitud
-                          </button> */}
+                          </button>
                         </div>
 
                         <p className="text-sm text-gray-700 mb-2">{propiedad.Caracteristicas}</p>

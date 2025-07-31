@@ -20,9 +20,6 @@ function App() {
     usuarioActual,
 
     // Actions
-    agregarPropietario,
-    agregarPropiedad,
-    crearSolicitud,
     asignarPerito,
     crearEvaluacion,
     setUsuarioActual,
@@ -48,25 +45,10 @@ function App() {
         return <Dashboard estadisticas={getEstadisticasDashboard()} />
 
       case 'propietarios':
-        return (
-          <PropietariosSection
-            propietarios={propietarios}
-            propiedades={propiedades}
-            onAgregarPropietario={agregarPropietario}
-            onAgregarPropiedad={agregarPropiedad}
-            onCrearSolicitud={crearSolicitud}
-          />
-        )
+        return <PropietariosSection />
 
       case 'solicitudes':
-        return (
-          <SolicitudesSection
-            solicitudes={solicitudes}
-            propietarios={propietarios}
-            propiedades={propiedades}
-            peritos={peritos}
-          />
-        )
+        return <SolicitudesSection />
 
       case 'asignaciones':
         return (

@@ -2,7 +2,16 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
-import { NewPropiedad, Propiedad, Solicitante, SolicitantePropiedades } from '../lib/definitions'
+import {
+  NewPropiedad,
+  NewSolicitante,
+  NewSolicitud,
+  Propiedad,
+  Solicitante,
+  SolicitantePropiedades,
+  Solicitud,
+  SolicitudSolicitantePropiedadPerito
+} from '../lib/definitions'
 import getConnection from './database'
 
 async function getSolicitantes(): Promise<SolicitantePropiedades[]> {
@@ -29,6 +38,59 @@ async function createPropiedad(propiedad: NewPropiedad, ID_Solicitante: number) 
   await conn.query(
     `INSERT INTO propiedad (Tipo, Direccion, Caracteristicas, ID_Solicitante) VALUES ("${propiedad.Tipo}", "${propiedad.Direccion}", "${propiedad.Caracteristicas}", ${ID_Solicitante})`
   )
+}
+
+async function createSolicitante(solicitante: NewSolicitante) {
+  const conn = await getConnection()
+  await conn.query(
+    `INSERT INTO solicitante (Nombre, Contacto) VALUES ("${solicitante.Nombre}", "${solicitante.Contacto}")`
+  )
+}
+
+async function createSolicitud(solicitud: NewSolicitud) {
+  const conn = await getConnection()
+  await conn.query(
+    `INSERT INTO solicitud (Fecha, ID_Solicitante, ID_Propiedad) VALUES (NOW(), ${solicitud.ID_Solicitante}, ${solicitud.ID_Propiedad})`
+  )
+}
+
+async function getSolicitudes() {
+  const conn = await getConnection()
+  const result = (await conn.query('SELECT * FROM solicitud')) as Solicitud[]
+  const solicitudesCompletas: SolicitudSolicitantePropiedadPerito[] = await Promise.all(
+    result.map(async (solicitud) => {
+      const solicitante = (await conn.query(
+        `SELECT * FROM solicitante WHERE ID = ${solicitud.ID_Solicitante}`
+      )) as Solicitante[]
+
+      const propiedad = (await conn.query(
+        `SELECT * FROM propiedad WHERE ID = ${solicitud.ID_Propiedad}`
+      )) as Propiedad[]
+
+      if (solicitud.ID_Perito === null) {
+        return {
+          ...solicitud,
+          Propietario: solicitante[0],
+          Propiedad: propiedad[0],
+          Perito: undefined
+        }
+      }
+
+      const perito = (await conn.query(
+        `SELECT * FROM perito WHERE ID = ${solicitud.ID_Perito}`
+      )) as Solicitante[]
+
+      return {
+        ...solicitud,
+        Propietario: solicitante[0],
+        Propiedad: propiedad[0],
+        Perito: perito[0]
+      }
+    })
+  )
+
+  // Add perito, solicitante and propiedad info
+  return solicitudesCompletas
 }
 
 function createWindow(): void {
@@ -88,6 +150,18 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-solicitantes', async () => {
     return await getSolicitantes()
+  })
+
+  ipcMain.handle('create-solicitante', async (_, solicitante: NewSolicitante) => {
+    await createSolicitante(solicitante)
+  })
+
+  ipcMain.handle('create-solicitud', async (_, solicitud: NewSolicitud) => {
+    await createSolicitud(solicitud)
+  })
+
+  ipcMain.handle('get-solicitudes', async () => {
+    return await getSolicitudes()
   })
 
   createWindow()
