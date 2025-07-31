@@ -6,6 +6,7 @@ import {
   NewPropiedad,
   NewSolicitante,
   NewSolicitud,
+  Perito,
   Propiedad,
   Solicitante,
   SolicitantePropiedades,
@@ -93,6 +94,18 @@ async function getSolicitudes() {
   return solicitudesCompletas
 }
 
+async function getPeritos() {
+  const conn = await getConnection()
+  const result = (await conn.query('SELECT * FROM perito')) as Perito[]
+  return result
+}
+
+async function asignarPerito(solicitudId: number, peritoId: number) {
+  const conn = await getConnection()
+  await conn.query(`UPDATE solicitud SET ID_Perito = ${peritoId} WHERE ID = ${solicitudId}`)
+  await conn.query(`UPDATE solicitud SET Estado = "Asignada" WHERE ID = ${solicitudId}`)
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -162,6 +175,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-solicitudes', async () => {
     return await getSolicitudes()
+  })
+
+  ipcMain.handle('get-peritos', async () => {
+    return await getPeritos()
+  })
+
+  ipcMain.handle('asignar-perito', async (_, solicitudId: number, peritoId: number) => {
+    await asignarPerito(solicitudId, peritoId)
   })
 
   createWindow()

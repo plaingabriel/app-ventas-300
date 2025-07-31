@@ -1,38 +1,43 @@
 import { AlertCircle, Clock, MapPin, User, UserCheck } from 'lucide-react'
-import { useState } from 'react'
-import { Perito, Propiedad, Propietario, SolicitudVenta } from '../types'
+import { useEffect, useState } from 'react'
+import { Perito, SolicitudSolicitantePropiedadPerito } from 'src/lib/definitions'
 
-interface AsignacionesSectionProps {
-  solicitudes: SolicitudVenta[]
-  propietarios: Propietario[]
-  propiedades: Propiedad[]
-  peritos: Perito[]
-  onAsignarPerito: (solicitudId: string, peritoId: string) => void
-}
+export function AsignacionesSection() {
+  const [solicitudes, setSolicitudes] = useState<SolicitudSolicitantePropiedadPerito[]>([])
+  const [peritos, setPeritos] = useState<Perito[]>([])
+  const [asignacionActiva, setAsignacionActiva] = useState<number | null>(null)
 
-export function AsignacionesSection({
-  solicitudes,
-  propietarios,
-  propiedades,
-  peritos,
-  onAsignarPerito
-}: AsignacionesSectionProps) {
-  const [asignacionActiva, setAsignacionActiva] = useState<string | null>(null)
-
-  const getPropietario = (id: string) => propietarios.find((p) => p.id === id)
-  const getPropiedad = (id: string) => propiedades.find((p) => p.id === id)
-
-  const solicitudesPendientes = solicitudes.filter((s) => s.estado === 'pendiente')
-  const peritosDisponibles = peritos.filter((p) => p.disponible)
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES')
-  }
-
-  const handleAsignar = (solicitudId: string, peritoId: string) => {
-    onAsignarPerito(solicitudId, peritoId)
+  const handleAsignar = async (solicitudId: number, peritoId: number) => {
+    await window.electron.ipcRenderer.invoke('asignar-perito', solicitudId, peritoId)
     setAsignacionActiva(null)
+    getSolicitudes()
   }
+
+  const getSolicitudes = async () => {
+    const result = (await window.electron.ipcRenderer.invoke(
+      'get-solicitudes'
+    )) as SolicitudSolicitantePropiedadPerito[]
+
+    // Sort by date
+    const solicitudesOrdenadas = result.sort(
+      (a, b) => new Date(b.Fecha).getTime() - new Date(a.Fecha).getTime()
+    )
+
+    // Filtrar solicitudes pendientes
+    const solicitudesPendientes = solicitudesOrdenadas.filter((s) => s.Estado === 'Pendiente')
+
+    setSolicitudes(solicitudesPendientes)
+  }
+
+  const getPeritos = async () => {
+    const result = (await window.electron.ipcRenderer.invoke('get-peritos')) as Perito[]
+    setPeritos(result)
+  }
+
+  useEffect(() => {
+    getSolicitudes()
+    getPeritos()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -42,47 +47,8 @@ export function AsignacionesSection({
         <p className="text-gray-600 mt-1">Asignar peritos a solicitudes pendientes de evaluación</p>
       </div>
 
-      {/* Resumen rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Clock className="h-6 w-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{solicitudesPendientes.length}</p>
-              <p className="text-sm text-gray-600">Solicitudes Pendientes</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <UserCheck className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{peritosDisponibles.length}</p>
-              <p className="text-sm text-gray-600">Peritos Disponibles</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <User className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{peritos.length}</p>
-              <p className="text-sm text-gray-600">Total Peritos</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Lista de solicitudes pendientes */}
-      {solicitudesPendientes.length === 0 ? (
+      {solicitudes.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No hay solicitudes pendientes</h3>
@@ -96,13 +62,12 @@ export function AsignacionesSection({
             Solicitudes Pendientes de Asignación
           </h2>
 
-          {solicitudesPendientes.map((solicitud) => {
-            const propietario = getPropietario(solicitud.propietarioId)
-            const propiedad = getPropiedad(solicitud.propiedadId)
+          {solicitudes.map((solicitud, index) => {
+            const { Propietario, Propiedad } = solicitud
 
             return (
               <div
-                key={solicitud.id}
+                key={solicitud.ID}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
               >
                 <div className="p-6">
@@ -112,16 +77,18 @@ export function AsignacionesSection({
                         <Clock className="h-6 w-6 text-orange-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{solicitud.numero}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          SOL-{solicitud.Fecha.toLocaleDateString('es-ES')}-{index + 1}
+                        </h3>
                         <p className="text-sm text-gray-600">
-                          Creada el {formatDate(solicitud.fechaCreacion)}
+                          Creada el {solicitud.Fecha.toLocaleDateString('es-ES')}
                         </p>
                       </div>
                     </div>
 
                     <button
                       onClick={() =>
-                        setAsignacionActiva(asignacionActiva === solicitud.id ? null : solicitud.id)
+                        setAsignacionActiva(asignacionActiva === solicitud.ID ? null : solicitud.ID)
                       }
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
                     >
@@ -137,13 +104,10 @@ export function AsignacionesSection({
                         <User className="h-4 w-4" />
                         <span>Propietario</span>
                       </h4>
-                      {propietario && (
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p className="font-medium text-gray-900">{propietario.nombre}</p>
-                          <p>{propietario.telefono}</p>
-                          <p>{propietario.email}</p>
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p className="font-medium text-gray-900">{Propietario.Nombre}</p>
+                        <p>{Propietario.Contacto}</p>
+                      </div>
                     </div>
 
                     {/* Propiedad */}
@@ -152,32 +116,30 @@ export function AsignacionesSection({
                         <MapPin className="h-4 w-4" />
                         <span>Propiedad</span>
                       </h4>
-                      {propiedad && (
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p className="font-medium text-gray-900 capitalize">{propiedad.tipo}</p>
-                          <p>{propiedad.direccion}</p>
-                          <p className="text-xs">{propiedad.caracteristicas}</p>
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p className="font-medium text-gray-900 capitalize">{Propiedad.Tipo}</p>
+                        <p>{Propiedad.Direccion}</p>
+                        <p className="text-xs">{Propiedad.Caracteristicas}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Panel de asignación */}
-                {asignacionActiva === solicitud.id && (
+                {asignacionActiva === solicitud.ID && (
                   <div className="border-t border-gray-200 p-6 bg-gray-50">
                     <h4 className="text-lg font-medium text-gray-900 mb-4">Seleccionar Perito</h4>
 
-                    {peritosDisponibles.length === 0 ? (
+                    {peritos.length === 0 ? (
                       <div className="text-center py-8">
                         <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                         <p className="text-gray-600">No hay peritos disponibles en este momento</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {peritosDisponibles.map((perito) => (
+                        {peritos.map((perito) => (
                           <div
-                            key={perito.id}
+                            key={perito.ID}
                             className="bg-white rounded-lg border border-gray-200 p-4"
                           >
                             <div className="flex items-center space-x-3 mb-3">
@@ -185,19 +147,12 @@ export function AsignacionesSection({
                                 <User className="h-5 w-5 text-green-600" />
                               </div>
                               <div>
-                                <h5 className="font-medium text-gray-900">{perito.nombre}</h5>
-                                <p className="text-sm text-gray-600">{perito.especialidad}</p>
+                                <h5 className="font-medium text-gray-900">{perito.Nombre}</h5>
                               </div>
                             </div>
 
-                            <div className="text-sm text-gray-600 space-y-1 mb-4">
-                              <p>{perito.telefono}</p>
-                              <p>{perito.email}</p>
-                              <p className="font-medium">Comisión: {perito.comisionPorcentaje}%</p>
-                            </div>
-
                             <button
-                              onClick={() => handleAsignar(solicitud.id, perito.id)}
+                              onClick={() => handleAsignar(solicitud.ID, perito.ID)}
                               className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                             >
                               Asignar
