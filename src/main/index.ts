@@ -94,6 +94,15 @@ async function getSolicitudes() {
   return solicitudesCompletas
 }
 
+async function getSolicitudesByPerito(peritoId: number) {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    `SELECT * FROM solicitud WHERE ID_Perito = ${peritoId}`
+  )) as Solicitud[]
+
+  return result[0]
+}
+
 async function getPeritos() {
   const conn = await getConnection()
   const result = (await conn.query('SELECT * FROM perito')) as Perito[]
@@ -183,6 +192,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('asignar-perito', async (_, solicitudId: number, peritoId: number) => {
     await asignarPerito(solicitudId, peritoId)
+  })
+
+  ipcMain.handle('get-solicitudes-by-perito', async (_, peritoId: number) => {
+    return await getSolicitudesByPerito(peritoId)
   })
 
   createWindow()

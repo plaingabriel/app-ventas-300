@@ -26,14 +26,6 @@ export function Layout({
           ...baseItems,
           { id: 'propietarios', label: 'Propietarios', icon: Users },
           { id: 'solicitudes', label: 'Solicitudes', icon: FileText },
-          { id: 'asignaciones', label: 'Asignaciones', icon: Building2 },
-          { id: 'evaluaciones', label: 'Evaluaciones', icon: Calculator }
-        ]
-      case 'coordinador':
-        return [
-          ...baseItems,
-          { id: 'propietarios', label: 'Propietarios', icon: Users },
-          { id: 'solicitudes', label: 'Solicitudes', icon: FileText },
           { id: 'asignaciones', label: 'Asignaciones', icon: Building2 }
         ]
       case 'perito':
@@ -41,8 +33,6 @@ export function Layout({
           ...baseItems,
           { id: 'mis-evaluaciones', label: 'Mis Evaluaciones', icon: Calculator }
         ]
-      case 'finanzas':
-        return [...baseItems, { id: 'reportes', label: 'Reportes', icon: BarChart3 }]
       default:
         return baseItems
     }

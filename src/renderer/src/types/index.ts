@@ -49,9 +49,8 @@ export interface Evaluacion {
 }
 
 export interface Usuario {
-  id: string
+  id: number
   nombre: string
-  email: string
   rol: 'admin' | 'coordinador' | 'perito' | 'finanzas'
 }
 

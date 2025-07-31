@@ -129,27 +129,13 @@ export const mockEvaluaciones: Evaluacion[] = [
 
 export const mockUsuarios: Usuario[] = [
   {
-    id: '1',
+    id: 0,
     nombre: 'Admin Principal',
-    email: 'admin@ventas300.com',
     rol: 'admin'
   },
   {
-    id: '2',
-    nombre: 'Coordinador López',
-    email: 'coordinador@ventas300.com',
-    rol: 'coordinador'
-  },
-  {
-    id: '3',
-    nombre: 'Ana Torres',
-    email: 'ana.torres@ventas300.com',
-    rol: 'perito'
-  },
-  {
-    id: '4',
+    id: 1,
     nombre: 'Finanzas Dept.',
-    email: 'finanzas@ventas300.com',
     rol: 'finanzas'
   }
 ]

@@ -1,24 +1,40 @@
 import { Building2, LogIn } from 'lucide-react'
 import React, { useState } from 'react'
-import { Usuario } from '../types'
+import { Perito, Usuario } from 'src/lib/definitions'
 
 interface LoginFormProps {
-  usuarios: Usuario[]
-  onLogin: (usuario: Usuario) => void
+  peritos: Perito[]
+  onLogin: React.Dispatch<React.SetStateAction<Usuario | null>>
 }
 
-export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
-  const [email, setEmail] = useState('admin@ventas300.com')
+const usuarioAdmin: Usuario = {
+  id: 0,
+  nombre: 'Admin Principal',
+  rol: 'admin'
+}
+
+export function LoginForm({ peritos, onLogin }: LoginFormProps) {
+  const [id, setID] = useState(0)
   const [error, setError] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const usuario = usuarios.find((u) => u.email === email)
-    if (usuario) {
-      onLogin(usuario)
+    if (id === 0) {
+      onLogin(usuarioAdmin)
+      return
+    }
+
+    const perito = peritos.find((p) => p.ID === id)
+
+    if (perito) {
+      onLogin({
+        id: perito.ID,
+        nombre: perito.Nombre,
+        rol: 'perito'
+      })
     } else {
-      setError('Usuario no encontrado')
+      setError('El perito no existe')
     }
   }
 
@@ -44,17 +60,20 @@ export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
                 Correo Electrónico
               </label>
               <select
-                id="email"
-                value={email}
+                value={id}
                 onChange={(e) => {
-                  setEmail(e.target.value)
+                  setID(parseInt(e.target.value))
                   setError('')
                 }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
-                {usuarios.map((usuario) => (
-                  <option key={usuario.id} value={usuario.email}>
-                    {usuario.nombre} ({usuario.rol})
+                <option value={usuarioAdmin.id}>
+                  {usuarioAdmin.nombre} - ({usuarioAdmin.rol})
+                </option>
+
+                {peritos.map((perito) => (
+                  <option key={perito.ID} value={perito.ID}>
+                    {perito.Nombre} - Perito
                   </option>
                 ))}
               </select>
@@ -79,13 +98,7 @@ export function LoginForm({ usuarios, onLogin }: LoginFormProps) {
                 • <strong>Admin:</strong> Acceso completo al sistema
               </li>
               <li>
-                • <strong>Coordinador:</strong> Gestión de asignaciones
-              </li>
-              <li>
                 • <strong>Perito:</strong> Evaluaciones de propiedades
-              </li>
-              <li>
-                • <strong>Finanzas:</strong> Reportes y comisiones
               </li>
             </ul>
           </div>

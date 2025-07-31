@@ -41,3 +41,9 @@ export interface Perito {
   ID: number
   Nombre: string
 }
+
+export interface Usuario {
+  id: number
+  nombre: string
+  rol: 'admin' | 'perito' | 'finanzas'
+}

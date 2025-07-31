@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Perito, Usuario } from 'src/lib/definitions'
 import { AsignacionesSection } from './components/AsignacionesSection'
 import { Dashboard } from './components/Dashboard'
 import { EvaluacionesSection } from './components/EvaluacionesSection'
@@ -10,28 +11,27 @@ import { useVentas300Data } from './hooks/useVentas300Data'
 
 function App() {
   const {
-    // Data
-    propietarios,
-    propiedades,
-    peritos,
-    solicitudes,
     evaluaciones,
-    usuarios,
-    usuarioActual,
-
-    // Actions
-    asignarPerito,
-    crearEvaluacion,
-    setUsuarioActual,
 
     // Computed
     getEstadisticasDashboard
   } = useVentas300Data()
 
   const [seccionActual, setSeccionActual] = useState('dashboard')
+  const [peritos, setPeritos] = useState<Perito[]>([])
+  const [usuarioActual, setUsuarioActual] = useState<Usuario | null>(null)
+
+  const getPeritos = async () => {
+    const result = (await window.electron.ipcRenderer.invoke('get-peritos')) as Perito[]
+    setPeritos(result)
+  }
+
+  useEffect(() => {
+    getPeritos()
+  }, [])
 
   if (!usuarioActual) {
-    return <LoginForm usuarios={usuarios} onLogin={setUsuarioActual} />
+    return <LoginForm peritos={peritos} onLogin={setUsuarioActual} />
   }
 
   const handleLogout = () => {
@@ -51,29 +51,11 @@ function App() {
         return <SolicitudesSection />
 
       case 'asignaciones':
-        return (
-          <AsignacionesSection
-            solicitudes={solicitudes}
-            propietarios={propietarios}
-            propiedades={propiedades}
-            peritos={peritos}
-            onAsignarPerito={asignarPerito}
-          />
-        )
+        return <AsignacionesSection />
 
       case 'evaluaciones':
       case 'mis-evaluaciones':
-        return (
-          <EvaluacionesSection
-            solicitudes={solicitudes}
-            propietarios={propietarios}
-            propiedades={propiedades}
-            peritos={peritos}
-            evaluaciones={evaluaciones}
-            usuarioActual={usuarioActual}
-            onCrearEvaluacion={crearEvaluacion}
-          />
-        )
+        return <EvaluacionesSection usuarioActual={usuarioActual} />
 
       case 'reportes':
         return (

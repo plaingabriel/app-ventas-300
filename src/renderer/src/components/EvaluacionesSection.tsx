@@ -1,58 +1,28 @@
 import { AlertCircle, Calculator, Camera, DollarSign, FileText, MapPin } from 'lucide-react'
-import React, { useState } from 'react'
-import { Evaluacion, Perito, Propiedad, Propietario, SolicitudVenta, Usuario } from '../types'
+import React, { useEffect, useState } from 'react'
+import { SolicitudSolicitantePropiedadPerito, Usuario } from 'src/lib/definitions'
 
-interface EvaluacionesSectionProps {
-  solicitudes: SolicitudVenta[]
-  propietarios: Propietario[]
-  propiedades: Propiedad[]
-  peritos: Perito[]
-  evaluaciones: Evaluacion[]
-  usuarioActual: Usuario
-  onCrearEvaluacion: (
-    evaluacion: Omit<Evaluacion, 'id' | 'comisionCalculada' | 'fechaEvaluacion'>
-  ) => void
-}
-
-export function EvaluacionesSection({
-  solicitudes,
-  propietarios,
-  propiedades,
-  peritos,
-  evaluaciones,
-  usuarioActual,
-  onCrearEvaluacion
-}: EvaluacionesSectionProps) {
-  const [evaluacionActiva, setEvaluacionActiva] = useState<string | null>(null)
+export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario }) {
+  const [solicitudes, setSolicitudes] = useState<SolicitudSolicitantePropiedadPerito[]>([])
+  const [asignadas, setAsignadas] = useState<SolicitudSolicitantePropiedadPerito[]>([])
+  const [evaluaciones, setEvaluaciones] = useState<SolicitudSolicitantePropiedadPerito[]>([])
+  const [evaluacionActiva, setEvaluacionActiva] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     observaciones: '',
     valorEvaluado: '',
     fotos: [] as string[]
   })
 
-  const getPropietario = (id: string) => propietarios.find((p) => p.id === id)
-  const getPropiedad = (id: string) => propiedades.find((p) => p.id === id)
-  const getPerito = (id: string) => peritos.find((p) => p.id === id)
-  const getEvaluacion = (solicitudId: string) =>
-    evaluaciones.find((e) => e.solicitudId === solicitudId)
+  const getSolicitudes = async () => {
+    const result = (await window.electron.ipcRenderer.invoke(
+      'get-solicitudes-by-perito',
+      usuarioActual.id
+    )) as SolicitudSolicitantePropiedadPerito[]
 
-  // Filtrar solicitudes según el rol del usuario
-  const getSolicitudesRelevantes = () => {
-    if (usuarioActual.rol === 'perito') {
-      // Para peritos: solo sus solicitudes asignadas
-      const peritoData = peritos.find((p) => p.email === usuarioActual.email)
-      if (peritoData) {
-        return solicitudes.filter((s) => s.peritoId === peritoData.id)
-      }
-      return []
-    } else {
-      // Para admin y coordinador: todas las solicitudes asignadas
-      return solicitudes.filter((s) => s.estado === 'asignada' || s.estado === 'evaluada')
-    }
+    setSolicitudes(result)
+    setAsignadas(result.filter((s) => s.Estado === 'Asignada'))
+    setEvaluaciones(result.filter((s) => s.Estado === 'Evaluada'))
   }
-
-  const solicitudesRelevantes = getSolicitudesRelevantes()
-  const solicitudesPorEvaluar = solicitudesRelevantes.filter((s) => s.estado === 'asignada')
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES')
@@ -65,28 +35,20 @@ export function EvaluacionesSection({
     }).format(amount)
   }
 
-  const calcularComision = (valor: number, peritoId: string) => {
-    const perito = getPerito(peritoId)
-    return perito ? (valor * perito.comisionPorcentaje) / 100 : 0
+  const calcularComision = (valor: number) => {
+    return (valor * 10) / 100
   }
 
-  const handleSubmitEvaluacion = (e: React.FormEvent, solicitudId: string) => {
+  const handleSubmitEvaluacion = (e: React.FormEvent, solicitudId: number) => {
     e.preventDefault()
-
-    const solicitud = solicitudes.find((s) => s.id === solicitudId)
-    if (!solicitud?.peritoId) return
-
-    onCrearEvaluacion({
-      solicitudId,
-      peritoId: solicitud.peritoId,
-      observaciones: formData.observaciones,
-      valorEvaluado: parseFloat(formData.valorEvaluado),
-      fotos: formData.fotos
-    })
 
     setFormData({ observaciones: '', valorEvaluado: '', fotos: [] })
     setEvaluacionActiva(null)
   }
+
+  useEffect(() => {
+    getSolicitudes()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -110,7 +72,7 @@ export function EvaluacionesSection({
               <Calculator className="h-4 w-4 text-blue-600" />
             </div>
             <div>
-              <p className="text-lg font-semibold text-gray-900">{solicitudesRelevantes.length}</p>
+              <p className="text-lg font-semibold text-gray-900">{solicitudes.length}</p>
               <p className="text-sm text-gray-600">Total Asignadas</p>
             </div>
           </div>
@@ -122,7 +84,7 @@ export function EvaluacionesSection({
               <FileText className="h-4 w-4 text-orange-600" />
             </div>
             <div>
-              <p className="text-lg font-semibold text-gray-900">{solicitudesPorEvaluar.length}</p>
+              <p className="text-lg font-semibold text-gray-900">{asignadas.length}</p>
               <p className="text-sm text-gray-600">Por Evaluar</p>
             </div>
           </div>
@@ -134,16 +96,7 @@ export function EvaluacionesSection({
               <DollarSign className="h-4 w-4 text-green-600" />
             </div>
             <div>
-              <p className="text-lg font-semibold text-gray-900">
-                {
-                  evaluaciones.filter((e) => {
-                    const solicitud = solicitudes.find((s) => s.id === e.solicitudId)
-                    return usuarioActual.rol === 'perito'
-                      ? e.peritoId === peritos.find((p) => p.email === usuarioActual.email)?.id
-                      : true
-                  }).length
-                }
-              </p>
+              <p className="text-lg font-semibold text-gray-900">{evaluaciones.length}</p>
               <p className="text-sm text-gray-600">Evaluadas</p>
             </div>
           </div>
@@ -156,15 +109,7 @@ export function EvaluacionesSection({
             </div>
             <div>
               <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(
-                  evaluaciones
-                    .filter((e) => {
-                      return usuarioActual.rol === 'perito'
-                        ? e.peritoId === peritos.find((p) => p.email === usuarioActual.email)?.id
-                        : true
-                    })
-                    .reduce((sum, e) => sum + e.comisionCalculada, 0)
-                )}
+                {formatCurrency(evaluaciones.reduce((sum, e) => sum + e.Comision, 0))}
               </p>
               <p className="text-sm text-gray-600">Comisiones</p>
             </div>
@@ -173,7 +118,7 @@ export function EvaluacionesSection({
       </div>
 
       {/* Lista de solicitudes */}
-      {solicitudesRelevantes.length === 0 ? (
+      {solicitudes.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No hay evaluaciones asignadas</h3>
@@ -185,16 +130,13 @@ export function EvaluacionesSection({
         </div>
       ) : (
         <div className="space-y-4">
-          {solicitudesRelevantes.map((solicitud) => {
-            const propietario = getPropietario(solicitud.propietarioId)
-            const propiedad = getPropiedad(solicitud.propiedadId)
-            const perito = getPerito(solicitud.peritoId!)
-            const evaluacionExistente = getEvaluacion(solicitud.id)
-            const puedeEvaluar = solicitud.estado === 'asignada'
+          {solicitudes.map((solicitud, index) => {
+            const { Estado, Propietario, Perito, Propiedad } = solicitud
+            const puedeEvaluar = solicitud.Estado === 'Asignada'
 
             return (
               <div
-                key={solicitud.id}
+                key={solicitud.ID}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
               >
                 <div className="p-6">
@@ -202,52 +144,46 @@ export function EvaluacionesSection({
                     <div className="flex items-center space-x-4">
                       <div
                         className={`w-12 h-12 ${
-                          evaluacionExistente ? 'bg-green-100' : 'bg-orange-100'
+                          Estado === 'Evaluada' ? 'bg-green-100' : 'bg-orange-100'
                         } rounded-lg flex items-center justify-center`}
                       >
                         <Calculator
                           className={`h-6 w-6 ${
-                            evaluacionExistente ? 'text-green-600' : 'text-orange-600'
+                            Estado === 'Evaluada' ? 'text-green-600' : 'text-orange-600'
                           }`}
                         />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{solicitud.numero}</h3>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <span>Asignada: {formatDate(solicitud.fechaAsignacion!)}</span>
-                          {evaluacionExistente && (
-                            <span>Evaluada: {formatDate(evaluacionExistente.fechaEvaluacion)}</span>
-                          )}
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          SOL-{solicitud.Fecha.toLocaleDateString('es-ES')}-{index + 1}
+                        </h3>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-3">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          evaluacionExistente
+                          Estado === 'Evaluada'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-orange-100 text-orange-800'
                         }`}
                       >
-                        {evaluacionExistente ? 'Evaluada' : 'Pendiente'}
+                        {Estado === 'Evaluada' ? 'Evaluada' : 'Pendiente'}
                       </span>
 
-                      {puedeEvaluar &&
-                        (usuarioActual.rol !== 'perito' ||
-                          perito?.email === usuarioActual.email) && (
-                          <button
-                            onClick={() =>
-                              setEvaluacionActiva(
-                                evaluacionActiva === solicitud.id ? null : solicitud.id
-                              )
-                            }
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                          >
-                            <Calculator className="h-4 w-4" />
-                            <span>Evaluar</span>
-                          </button>
-                        )}
+                      {puedeEvaluar && (
+                        <button
+                          onClick={() =>
+                            setEvaluacionActiva(
+                              evaluacionActiva === solicitud.ID ? null : solicitud.ID
+                            )
+                          }
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Calculator className="h-4 w-4" />
+                          <span>Evaluar</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -255,13 +191,10 @@ export function EvaluacionesSection({
                     {/* Propietario */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 mb-2">Propietario</h4>
-                      {propietario && (
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p className="font-medium text-gray-900">{propietario.nombre}</p>
-                          <p>{propietario.telefono}</p>
-                          <p>{propietario.email}</p>
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p className="font-medium text-gray-900">{Propietario.Nombre}</p>
+                        <p>{Propietario.Contacto}</p>
+                      </div>
                     </div>
 
                     {/* Propiedad */}
@@ -270,30 +203,26 @@ export function EvaluacionesSection({
                         <MapPin className="h-4 w-4" />
                         <span>Propiedad</span>
                       </h4>
-                      {propiedad && (
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p className="font-medium text-gray-900 capitalize">{propiedad.tipo}</p>
-                          <p>{propiedad.direccion}</p>
-                          <p className="text-xs">{propiedad.caracteristicas}</p>
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p className="font-medium text-gray-900 capitalize">{Propiedad.Tipo}</p>
+                        <p>{Propiedad.Direccion}</p>
+                      </div>
                     </div>
 
                     {/* Perito */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 mb-2">Perito Asignado</h4>
-                      {perito && (
+                      {Perito && (
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p className="font-medium text-gray-900">{perito.nombre}</p>
-                          <p>{perito.especialidad}</p>
-                          <p>Comisión: {perito.comisionPorcentaje}%</p>
+                          <p className="font-medium text-gray-900">{Perito.Nombre}</p>
+                          <p>Comisión: 10%</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Evaluación existente */}
-                  {evaluacionExistente && (
+                  {Estado === 'Evaluada' && (
                     <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                       <h4 className="font-medium text-green-900 mb-3 flex items-center space-x-2">
                         <DollarSign className="h-4 w-4" />
@@ -304,29 +233,27 @@ export function EvaluacionesSection({
                         <div>
                           <p className="text-sm font-medium text-green-900">Valor Evaluado</p>
                           <p className="text-lg font-bold text-green-700">
-                            {formatCurrency(evaluacionExistente.valorEvaluado)}
+                            {formatCurrency(solicitud.Precio_Fijado)}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-green-900">Comisión Calculada</p>
                           <p className="text-lg font-bold text-green-700">
-                            {formatCurrency(evaluacionExistente.comisionCalculada)}
+                            {formatCurrency(solicitud.Precio_Fijado)}
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-3">
                         <p className="text-sm font-medium text-green-900 mb-1">Observaciones</p>
-                        <p className="text-sm text-green-800">
-                          {evaluacionExistente.observaciones}
-                        </p>
+                        <p className="text-sm text-green-800">{solicitud.Observaciones}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Formulario de evaluación */}
-                {evaluacionActiva === solicitud.id && puedeEvaluar && (
+                {evaluacionActiva === solicitud.ID && puedeEvaluar && (
                   <div className="border-t border-gray-200 p-6 bg-gray-50">
                     <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center space-x-2">
                       <Calculator className="h-5 w-5" />
@@ -334,7 +261,7 @@ export function EvaluacionesSection({
                     </h4>
 
                     <form
-                      onSubmit={(e) => handleSubmitEvaluacion(e, solicitud.id)}
+                      onSubmit={(e) => handleSubmitEvaluacion(e, solicitud.ID)}
                       className="space-y-4"
                     >
                       <div>
@@ -377,10 +304,8 @@ export function EvaluacionesSection({
                             Comisión Estimada
                           </label>
                           <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                            {formData.valorEvaluado && perito
-                              ? formatCurrency(
-                                  calcularComision(parseFloat(formData.valorEvaluado), perito.id)
-                                )
+                            {formData.valorEvaluado && Perito
+                              ? formatCurrency(calcularComision(parseFloat(formData.valorEvaluado)))
                               : '$0.00'}
                           </div>
                         </div>
