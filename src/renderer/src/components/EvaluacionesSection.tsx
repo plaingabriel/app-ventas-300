@@ -9,8 +9,7 @@ export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario 
   const [evaluacionActiva, setEvaluacionActiva] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     observaciones: '',
-    valorEvaluado: '',
-    fotos: [] as string[]
+    valorEvaluado: ''
   })
 
   const getSolicitudes = async () => {
@@ -35,10 +34,18 @@ export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario 
     return (valor * 10) / 100
   }
 
-  const handleSubmitEvaluacion = (e: React.FormEvent, solicitudId: number) => {
+  const handleSubmitEvaluacion = async (e: React.FormEvent, solicitudId: number) => {
     e.preventDefault()
 
-    setFormData({ observaciones: '', valorEvaluado: '', fotos: [] })
+    await window.electron.ipcRenderer.invoke('create-evaluacion', {
+      solicitudId,
+      observaciones: formData.observaciones,
+      valorEvaluado: Number(formData.valorEvaluado),
+      comisionCalculada: calcularComision(Number(formData.valorEvaluado))
+    })
+    await getSolicitudes()
+
+    setFormData({ observaciones: '', valorEvaluado: '' })
     setEvaluacionActiva(null)
   }
 
@@ -305,30 +312,6 @@ export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario 
                               : '$0.00'}
                           </div>
                         </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <Camera className="h-4 w-4 inline mr-2" />
-                          Fotos de la Propiedad
-                        </label>
-                        <div className="text-sm text-gray-500 mb-2">
-                          Simulación: En un sistema real, aquí se cargarían las fotos
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="foto1.jpg, foto2.jpg, foto3.jpg"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              fotos: e.target.value
-                                .split(',')
-                                .map((f) => f.trim())
-                                .filter((f) => f)
-                            })
-                          }
-                        />
                       </div>
 
                       <div className="flex justify-end space-x-3 pt-4">

@@ -94,13 +94,58 @@ async function getSolicitudes() {
   return solicitudesCompletas
 }
 
+async function createEvaluacion(
+  solicitudId: number,
+  observaciones: string,
+  valorEvaluado: number,
+  comisionCalculada: number
+) {
+  const conn = await getConnection()
+  await conn.query(
+    `UPDATE solicitud SET Observaciones = "${observaciones}", Precio_Fijado = ${valorEvaluado}, Comision = ${comisionCalculada}" WHERE ID = ${solicitudId}`
+  )
+  await conn.query(`UPDATE solicitud SET Estado = "Evaluada" WHERE ID = ${solicitudId}`)
+}
+
 async function getSolicitudesByPerito(peritoId: number) {
   const conn = await getConnection()
   const result = (await conn.query(
     `SELECT * FROM solicitud WHERE ID_Perito = ${peritoId}`
   )) as Solicitud[]
 
-  return result
+  const solicitudesCompletas: SolicitudSolicitantePropiedadPerito[] = await Promise.all(
+    result.map(async (solicitud) => {
+      const solicitante = (await conn.query(
+        `SELECT * FROM solicitante WHERE ID = ${solicitud.ID_Solicitante}`
+      )) as Solicitante[]
+
+      const propiedad = (await conn.query(
+        `SELECT * FROM propiedad WHERE ID = ${solicitud.ID_Propiedad}`
+      )) as Propiedad[]
+
+      if (solicitud.ID_Perito === null) {
+        return {
+          ...solicitud,
+          Propietario: solicitante[0],
+          Propiedad: propiedad[0],
+          Perito: undefined
+        }
+      }
+
+      const perito = (await conn.query(
+        `SELECT * FROM perito WHERE ID = ${solicitud.ID_Perito}`
+      )) as Solicitante[]
+
+      return {
+        ...solicitud,
+        Propietario: solicitante[0],
+        Propiedad: propiedad[0],
+        Perito: perito[0]
+      }
+    })
+  )
+
+  return solicitudesCompletas
 }
 
 async function getPeritos() {
@@ -197,6 +242,19 @@ app.whenReady().then(() => {
   ipcMain.handle('get-solicitudes-by-perito', async (_, peritoId: number) => {
     return await getSolicitudesByPerito(peritoId)
   })
+
+  ipcMain.handle(
+    'create-evaluacion',
+    async (
+      _,
+      solicitudId: number,
+      observaciones: string,
+      valorEvaluado: number,
+      comisionCalculada: number
+    ) => {
+      await createEvaluacion(solicitudId, observaciones, valorEvaluado, comisionCalculada)
+    }
+  )
 
   createWindow()
 
