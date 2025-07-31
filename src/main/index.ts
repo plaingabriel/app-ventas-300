@@ -1,19 +1,49 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { NewPropiedad, Propiedad, Solicitante, SolicitantePropiedades } from '../lib/definitions'
+import getConnection from './database'
+
+async function getSolicitantes(): Promise<SolicitantePropiedades[]> {
+  const conn = await getConnection()
+  const result = (await conn.query('SELECT * FROM solicitante')) as Solicitante[]
+  const solicitantesPropiedades = await Promise.all(
+    result.map(async (solicitante) => {
+      const propiedades = (await conn.query(
+        `SELECT * FROM propiedad WHERE ID_Solicitante = ${solicitante.ID}`
+      )) as Propiedad[]
+
+      return {
+        ...solicitante,
+        propiedades
+      }
+    })
+  )
+
+  return solicitantesPropiedades
+}
+
+async function createPropiedad(propiedad: NewPropiedad, ID_Solicitante: number) {
+  const conn = await getConnection()
+  await conn.query(
+    `INSERT INTO propiedad (Tipo, Direccion, Caracteristicas, ID_Solicitante) VALUES ("${propiedad.Tipo}", "${propiedad.Direccion}", "${propiedad.Caracteristicas}", ${ID_Solicitante})`
+  )
+}
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 720,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      nodeIntegration: true,
+      contextIsolation: false
     }
   })
 
@@ -51,6 +81,14 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.handle('create-propiedad', async (_, propiedad: NewPropiedad, ID_Solicitante: number) => {
+    await createPropiedad(propiedad, ID_Solicitante)
+  })
+
+  ipcMain.handle('get-solicitantes', async () => {
+    return await getSolicitantes()
+  })
 
   createWindow()
 

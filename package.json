@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.1.11",
     "lucide-react": "^0.532.0",
+    "promise-mysql": "^5.2.0",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
