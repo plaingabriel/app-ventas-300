@@ -160,6 +160,62 @@ async function asignarPerito(solicitudId: number, peritoId: number) {
   await conn.query(`UPDATE solicitud SET Estado = "Asignada" WHERE ID = ${solicitudId}`)
 }
 
+type TotalComision = {
+  Total: number
+}
+
+async function getTotalComision() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT SUM(Comision) AS Total FROM solicitud'
+  )) as TotalComision[]
+
+  return result[0].Total
+}
+
+async function getAveragePrice() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT AVG(Precio_Fijado) AS Total FROM solicitud'
+  )) as TotalComision[]
+
+  return result[0].Total
+}
+
+async function getTotalSolicitudes() {
+  const conn = await getConnection()
+  const result = (await conn.query('SELECT COUNT(*) AS Total FROM solicitud')) as TotalComision[]
+
+  return result[0].Total
+}
+
+async function getTotalSolicitudesPendientes() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT COUNT(*) AS Total FROM solicitud WHERE Estado = "Pendiente"'
+  )) as TotalComision[]
+
+  return result[0].Total
+}
+
+async function getTotalSolicitudesAsignadas() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT COUNT(*) AS Total FROM solicitud WHERE Estado = "Asignada"'
+  )) as TotalComision[]
+
+  return result[0].Total
+}
+
+async function getTotalSolicitudesEvaluadas() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT COUNT(*) AS Total FROM solicitud WHERE Estado = "Evaluada"'
+  )) as TotalComision[]
+
+  return result[0].Total
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -255,6 +311,30 @@ app.whenReady().then(() => {
       await createEvaluacion(solicitudId, observaciones, valorEvaluado, comisionCalculada)
     }
   )
+
+  ipcMain.handle('get-total-comision', async () => {
+    return await getTotalComision()
+  })
+
+  ipcMain.handle('get-average-price', async () => {
+    return await getAveragePrice()
+  })
+
+  ipcMain.handle('get-total-solicitudes', async () => {
+    return await getTotalSolicitudes()
+  })
+
+  ipcMain.handle('get-total-solicitudes-pendientes', async () => {
+    return await getTotalSolicitudesPendientes()
+  })
+
+  ipcMain.handle('get-total-solicitudes-evaluadas', async () => {
+    return await getTotalSolicitudesEvaluadas()
+  })
+
+  ipcMain.handle('get-total-solicitudes-asignadas', async () => {
+    return await getTotalSolicitudesAsignadas()
+  })
 
   createWindow()
 

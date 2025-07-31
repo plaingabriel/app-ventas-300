@@ -1,11 +1,39 @@
 import { CheckCircle, Clock, DollarSign, FileText, TrendingUp, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { EstadisticaDashboard } from '../types'
 
-interface DashboardProps {
-  estadisticas: EstadisticaDashboard
-}
+export function Dashboard() {
+  const [totalComisiones, setTotalComisiones] = useState(0)
+  const [promedioEvaluaciones, setPromedioEvaluaciones] = useState(0)
+  const [totalEvaluaciones, setTotalEvaluaciones] = useState(0)
+  const [totalAsignaciones, setTotalAsignaciones] = useState(0)
+  const [totalPendientes, setTotalPendientes] = useState(0)
+  const [totalSolicitudes, setTotalSolicitudes] = useState(0)
 
-export function Dashboard({ estadisticas }: DashboardProps) {
+  const getTotales = async () => {
+    const comisiones = (await window.electron.ipcRenderer.invoke('get-total-comision')) as number
+    const promedio = (await window.electron.ipcRenderer.invoke('get-average-price')) as number
+    const evaluaciones = (await window.electron.ipcRenderer.invoke(
+      'get-total-solicitudes-evaluadas'
+    )) as number
+    const asignaciones = (await window.electron.ipcRenderer.invoke(
+      'get-total-solicitudes-asignadas'
+    )) as number
+    const pendientes = (await window.electron.ipcRenderer.invoke(
+      'get-total-solicitudes-pendientes'
+    )) as number
+    const solicitudes = (await window.electron.ipcRenderer.invoke(
+      'get-total-solicitudes'
+    )) as number
+
+    setTotalComisiones(comisiones)
+    setPromedioEvaluaciones(promedio)
+    setTotalEvaluaciones(evaluaciones)
+    setTotalAsignaciones(asignaciones)
+    setTotalPendientes(pendientes)
+    setTotalSolicitudes(solicitudes)
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -16,7 +44,7 @@ export function Dashboard({ estadisticas }: DashboardProps) {
   const cards = [
     {
       title: 'Total Solicitudes',
-      value: estadisticas.totalSolicitudes,
+      value: totalSolicitudes,
       icon: FileText,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50',
@@ -24,7 +52,7 @@ export function Dashboard({ estadisticas }: DashboardProps) {
     },
     {
       title: 'Pendientes',
-      value: estadisticas.solicitudesPendientes,
+      value: totalPendientes,
       icon: Clock,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',
@@ -32,7 +60,7 @@ export function Dashboard({ estadisticas }: DashboardProps) {
     },
     {
       title: 'Asignadas',
-      value: estadisticas.solicitudesAsignadas,
+      value: totalAsignaciones,
       icon: Users,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
@@ -40,7 +68,7 @@ export function Dashboard({ estadisticas }: DashboardProps) {
     },
     {
       title: 'Evaluadas',
-      value: estadisticas.solicitudesEvaluadas,
+      value: totalEvaluaciones,
       icon: CheckCircle,
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
@@ -51,21 +79,25 @@ export function Dashboard({ estadisticas }: DashboardProps) {
   const financialCards = [
     {
       title: 'Total Comisiones',
-      value: formatCurrency(estadisticas.totalComisiones),
+      value: formatCurrency(totalComisiones),
       icon: DollarSign,
       color: 'bg-emerald-500',
       bgColor: 'bg-emerald-50',
       textColor: 'text-emerald-700'
     },
     {
-      title: 'Valor Evaluaciones',
-      value: formatCurrency(estadisticas.valorTotalEvaluaciones),
+      title: 'Promedio Evaluaciones',
+      value: formatCurrency(promedioEvaluaciones),
       icon: TrendingUp,
       color: 'bg-indigo-500',
       bgColor: 'bg-indigo-50',
       textColor: 'text-indigo-700'
     }
   ]
+
+  useEffect(() => {
+    getTotales()
+  }, [])
 
   return (
     <div className="space-y-6">
