@@ -1,6 +1,5 @@
 import { CheckCircle, Clock, DollarSign, FileText, TrendingUp, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { EstadisticaDashboard } from '../types'
 
 export function Dashboard() {
   const [totalComisiones, setTotalComisiones] = useState(0)
