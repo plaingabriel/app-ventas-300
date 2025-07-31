@@ -1,6 +1,6 @@
 import { BarChart3, Building2, Calculator, FileText, LogOut, Users } from 'lucide-react'
 import React from 'react'
-import { Usuario } from '../types'
+import { Usuario } from 'src/lib/definitions'
 
 interface LayoutProps {
   children: React.ReactNode
