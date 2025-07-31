@@ -1,5 +1,6 @@
-import { CheckCircle, Clock, DollarSign, FileText, TrendingUp, Users } from 'lucide-react'
+import { CheckCircle, Clock, DollarSign, FileText, TrendingUp, User, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Perito } from 'src/lib/definitions'
 
 export function Dashboard() {
   const [totalComisiones, setTotalComisiones] = useState(0)
@@ -8,6 +9,13 @@ export function Dashboard() {
   const [totalAsignaciones, setTotalAsignaciones] = useState(0)
   const [totalPendientes, setTotalPendientes] = useState(0)
   const [totalSolicitudes, setTotalSolicitudes] = useState(0)
+  const [solicitudesGrouped, setSolicitudesGrouped] = useState<
+    {
+      ID_Perito: number
+      Total: number
+      Perito: Perito
+    }[]
+  >([])
 
   const getTotales = async () => {
     const comisiones = (await window.electron.ipcRenderer.invoke('get-total-comision')) as number
@@ -25,12 +33,21 @@ export function Dashboard() {
       'get-total-solicitudes'
     )) as number
 
+    const solicitudesGrouped = (await window.electron.ipcRenderer.invoke(
+      'get-total-solicitudes-by-perito'
+    )) as {
+      ID_Perito: number
+      Total: number
+      Perito: Perito
+    }[]
+
     setTotalComisiones(comisiones)
     setPromedioEvaluaciones(promedio)
     setTotalEvaluaciones(evaluaciones)
     setTotalAsignaciones(asignaciones)
     setTotalPendientes(pendientes)
     setTotalSolicitudes(solicitudes)
+    setSolicitudesGrouped(solicitudesGrouped)
   }
 
   const formatCurrency = (amount: number) => {
@@ -194,6 +211,44 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Cantidad de solicitudes por perito */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Solicitudes por Perito</h2>
+
+        <div className="space-y-6">
+          {solicitudesGrouped.map((grupo) => {
+            return (
+              <div key={grupo.ID_Perito} className="border border-gray-200 rounded-lg p-6">
+                {/* Header del Perito */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{grupo.Perito.Nombre}</h3>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <h4 className="font-medium text-gray-900">
+                      Solicitudes Asignadas ({grupo.Total})
+                    </h4>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {solicitudesGrouped.length === 0 && (
+        <div className="text-center py-8">
+          <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No hay solicitudes asignadas a peritos</p>
+        </div>
+      )}
     </div>
   )
 }

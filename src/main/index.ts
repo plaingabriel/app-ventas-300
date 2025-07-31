@@ -216,6 +216,25 @@ async function getTotalSolicitudesEvaluadas() {
   return result[0].Total
 }
 
+async function getSolicitudesGroupedByPeritos() {
+  const conn = await getConnection()
+  const result = (await conn.query(
+    'SELECT ID_Perito, COUNT(*) AS Total FROM solicitud WHERE ID_Perito IS NOT NULL GROUP BY ID_Perito'
+  )) as { ID_Perito: number; Total: number; Perito: Perito }[]
+
+  // Get Perito para cada ID_Perito
+  await Promise.all(
+    result.map(async (item) => {
+      const perito = (await conn.query(
+        `SELECT * FROM perito WHERE ID = ${item.ID_Perito}`
+      )) as Perito[]
+      item.Perito = perito[0]
+    })
+  )
+
+  return result
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -334,6 +353,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-total-solicitudes-asignadas', async () => {
     return await getTotalSolicitudesAsignadas()
+  })
+
+  ipcMain.handle('get-total-solicitudes-by-perito', async () => {
+    return await getSolicitudesGroupedByPeritos()
   })
 
   createWindow()
