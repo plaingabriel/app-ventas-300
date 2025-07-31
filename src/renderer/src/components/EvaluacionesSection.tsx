@@ -24,10 +24,6 @@ export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario 
     setEvaluaciones(result.filter((s) => s.Estado === 'Evaluada'))
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES')
-  }
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',

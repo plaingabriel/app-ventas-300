@@ -100,7 +100,7 @@ async function getSolicitudesByPerito(peritoId: number) {
     `SELECT * FROM solicitud WHERE ID_Perito = ${peritoId}`
   )) as Solicitud[]
 
-  return result[0]
+  return result
 }
 
 async function getPeritos() {
