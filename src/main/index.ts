@@ -102,7 +102,7 @@ async function createEvaluacion(
 ) {
   const conn = await getConnection()
   await conn.query(
-    `UPDATE solicitud SET Observaciones = "${observaciones}", Precio_Fijado = ${valorEvaluado}, Comision = ${comisionCalculada}" WHERE ID = ${solicitudId}`
+    `UPDATE solicitud SET Observaciones = "${observaciones}", Precio_Fijado = ${valorEvaluado}, Comision = ${comisionCalculada} WHERE ID = ${solicitudId}`
   )
   await conn.query(`UPDATE solicitud SET Estado = "Evaluada" WHERE ID = ${solicitudId}`)
 }

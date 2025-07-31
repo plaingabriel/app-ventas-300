@@ -1,4 +1,4 @@
-import { AlertCircle, Calculator, Camera, DollarSign, FileText, MapPin } from 'lucide-react'
+import { AlertCircle, Calculator, DollarSign, FileText, MapPin } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { SolicitudSolicitantePropiedadPerito, Usuario } from 'src/lib/definitions'
 
@@ -37,12 +37,14 @@ export function EvaluacionesSection({ usuarioActual }: { usuarioActual: Usuario 
   const handleSubmitEvaluacion = async (e: React.FormEvent, solicitudId: number) => {
     e.preventDefault()
 
-    await window.electron.ipcRenderer.invoke('create-evaluacion', {
+    await window.electron.ipcRenderer.invoke(
+      'create-evaluacion',
       solicitudId,
-      observaciones: formData.observaciones,
-      valorEvaluado: Number(formData.valorEvaluado),
-      comisionCalculada: calcularComision(Number(formData.valorEvaluado))
-    })
+      formData.observaciones,
+      Number(formData.valorEvaluado),
+      calcularComision(Number(formData.valorEvaluado))
+    )
+
     await getSolicitudes()
 
     setFormData({ observaciones: '', valorEvaluado: '' })
