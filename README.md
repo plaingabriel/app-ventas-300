@@ -1,5 +1,4 @@
 # VENTAS300: Real Estate Management System
-[![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/plaingabriel/app-ventas-300)
 
 VENTAS300 is a desktop application built with Electron, React, and TypeScript, designed to manage the workflow of a real estate sales business. It covers the entire process from owner and property registration to property valuation by certified appraisers and commission calculation.
 
